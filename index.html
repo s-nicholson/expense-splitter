@@ -1,178 +1,327 @@
 <html>
+
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-<style>
-*{box-sizing:border-box}
-body,html,input,select,button{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif!important}
-/* Nav */
-.nav-tabs .nav-link{color:#555;font-size:14px;padding:10px 12px;min-height:44px;display:flex;align-items:center}
-.nav-tabs .nav-link.active{color:#000;font-weight:500}
-/* Chips — larger tap targets */
-.pchip{display:inline-flex;align-items:center;padding:8px 13px;border-radius:20px;font-size:14px;border:1px solid #ccc;cursor:pointer;background:#fff;color:#555;user-select:none;margin:3px;min-height:36px;-webkit-tap-highlight-color:transparent}
-.pchip.sel{background:#E6F1FB;color:#0C447C;border-color:#85B7EB}
-/* Avatar */
-.avatar{width:34px;height:34px;border-radius:50%;background:#E6F1FB;color:#0C447C;font-size:12px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
-/* Expense card */
-.expense-card{background:#fff;border:1px solid #ddd;border-radius:8px;padding:12px 14px;margin-bottom:10px}
-.expense-card .meta{font-size:13px;color:#666;margin-top:4px}
-/* Icon buttons — 44px touch targets */
-.btn-icon{background:none;border:none;cursor:pointer;padding:0;width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:8px;font-size:18px;color:#444;-webkit-tap-highlight-color:transparent}
-.btn-icon:hover,.btn-icon:focus-visible{background:#f0f0f0}
-.btn-icon.danger{color:#c0392b}
-.btn-icon.danger:hover{background:#fdecea}
-/* Transfer card — wraps on small screens */
-.transfer-card{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 14px;background:#f8f9fa;border:1px solid #e0e0e0;border-radius:8px;margin-bottom:8px;font-size:15px}
-.transfer-card .amount{margin-left:auto;font-weight:600;font-size:16px;color:#1a1a1a}
-.edit-panel{background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:1rem;margin-bottom:1rem}
-/* Stack payer/amount on very small screens */
-@media(max-width:380px){
-  .d-flex.gap-2:has(#exp-amount),
-  .d-flex.gap-2:has(#edit-amount){flex-direction:column}
-}
-/* Comfortable form controls */
-.form-control,.form-select{min-height:44px;font-size:15px!important}
-.btn{min-height:44px}
-.btn-sm{min-height:40px}
-</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <style>
+    * {
+      box-sizing: border-box
+    }
+
+    body,
+    html,
+    input,
+    select,
+    button {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important
+    }
+
+    /* Nav */
+    .nav-tabs .nav-link {
+      color: #555;
+      font-size: 14px;
+      padding: 10px 12px;
+      min-height: 44px;
+      display: flex;
+      align-items: center
+    }
+
+    .nav-tabs .nav-link.active {
+      color: #000;
+      font-weight: 500
+    }
+
+    /* Chips — larger tap targets */
+    .pchip {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 13px;
+      border-radius: 20px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      background: #fff;
+      color: #555;
+      user-select: none;
+      margin: 3px;
+      min-height: 36px;
+      -webkit-tap-highlight-color: transparent
+    }
+
+    .pchip.sel {
+      background: #E6F1FB;
+      color: #0C447C;
+      border-color: #85B7EB
+    }
+
+    /* Avatar */
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #E6F1FB;
+      color: #0C447C;
+      font-size: 12px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    /* Expense card */
+    .expense-card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px
+    }
+
+    .expense-card .meta {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px
+    }
+
+    /* Icon buttons — 44px touch targets */
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      width: 44px;
+      height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 18px;
+      color: #444;
+      -webkit-tap-highlight-color: transparent
+    }
+
+    .btn-icon:hover,
+    .btn-icon:focus-visible {
+      background: #f0f0f0
+    }
+
+    .btn-icon.danger {
+      color: #c0392b
+    }
+
+    .btn-icon.danger:hover {
+      background: #fdecea
+    }
+
+    /* Transfer card — wraps on small screens */
+    .transfer-card {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 14px;
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 15px
+    }
+
+    .transfer-card .amount {
+      margin-left: auto;
+      font-weight: 600;
+      font-size: 16px;
+      color: #1a1a1a
+    }
+
+    .edit-panel {
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem
+    }
+
+    /* Stack payer/amount on very small screens */
+    @media(max-width:380px) {
+
+      .d-flex.gap-2:has(#exp-amount),
+      .d-flex.gap-2:has(#edit-amount) {
+        flex-direction: column
+      }
+    }
+
+    /* Comfortable form controls */
+    .form-control,
+    .form-select {
+      min-height: 44px;
+      font-size: 15px !important
+    }
+
+    .btn {
+      min-height: 44px
+    }
+
+    .btn-sm {
+      min-height: 40px
+    }
+  </style>
 </head>
+
 <body>
-<div class="p-2 p-sm-3">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <ul class="nav nav-tabs mb-0 flex-grow-1" style="border-bottom:none">
-      <li class="nav-item"><button class="nav-link active" onclick="showTab('people',this)"><i class="bi bi-users me-1" aria-hidden="true"></i>People</button></li>
-      <li class="nav-item"><button class="nav-link" onclick="showTab('expenses',this)"><i class="bi bi-receipt me-1" aria-hidden="true"></i>Expenses</button></li>
-      <li class="nav-item"><button class="nav-link" onclick="showTab('settle',this)"><i class="bi bi-arrows-exchange me-1" aria-hidden="true"></i>Settle up</button></li>
-    </ul>
-    <button class="btn btn-sm btn-outline-danger ms-2 flex-shrink-0" onclick="resetAll()"><i class="bi bi-trash me-1" aria-hidden="true"></i>Reset</button>
-  </div>
-
-  <div id="tab-people">
-    <div class="card mb-3"><div class="card-body">
-      <div class="d-flex gap-2">
-        <input type="text" class="form-control form-control-sm" id="person-name" placeholder="Add a person…" onkeydown="if(event.key==='Enter')addPerson()">
-        <button class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="addPerson()"><i class="bi bi-plus" aria-hidden="true"></i></button>
-      </div>
-    </div></div>
-    <div id="people-list" class="d-flex flex-wrap gap-2"></div>
-  </div>
-
-  <div id="tab-expenses" style="display:none">
-    <div class="card mb-3"><div class="card-body">
-      <div class="d-flex flex-column gap-2 mb-2">
-        <input type="text" class="form-control form-control-sm" id="exp-desc" placeholder="Description" maxlength="50">
-        <div class="d-flex gap-2">
-          <input type="number" class="form-control form-control-sm" id="exp-amount" placeholder="£ Amount" min="0" step="0.01">
-          <select class="form-select form-select-sm" id="exp-payer"><option value="">Paid by…</option></select>
-        </div>
-      </div>
-      <div class="mb-2">
-        <div style="font-size:12px;color:#888;margin-bottom:4px">Split between (blank = everyone):</div>
-        <div id="split-chips"></div>
-      </div>
-      <button class="btn btn-sm btn-outline-primary w-100 mt-1" onclick="addExpense()"><i class="bi bi-plus me-1" aria-hidden="true"></i>Add expense</button>
-    </div></div>
-
-    <div id="edit-panel" style="display:none" class="edit-panel">
-      <div style="font-size:14px;font-weight:500;margin-bottom:10px">Edit expense</div>
-      <div class="d-flex flex-column gap-2 mb-2">
-        <input type="text" class="form-control form-control-sm" id="edit-desc" placeholder="Description">
-        <div class="d-flex gap-2">
-          <input type="number" class="form-control form-control-sm" id="edit-amount" placeholder="£ Amount">
-          <select class="form-select form-select-sm" id="edit-payer"></select>
-        </div>
-      </div>
-      <div class="mb-2">
-        <div style="font-size:12px;color:#888;margin-bottom:4px">Split between:</div>
-        <div id="edit-split-chips"></div>
-      </div>
-      <div class="d-flex gap-2">
-        <button class="btn btn-sm btn-primary flex-fill" onclick="saveEdit()">Save</button>
-        <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="cancelEdit()">Cancel</button>
-      </div>
+  <div class="p-2 p-sm-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <ul class="nav nav-tabs mb-0 flex-grow-1" style="border-bottom:none">
+        <li class="nav-item"><button class="nav-link active" onclick="showTab('people',this)"><i
+              class="bi bi-users me-1" aria-hidden="true"></i>People</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="showTab('expenses',this)"><i class="bi bi-receipt me-1"
+              aria-hidden="true"></i>Expenses</button></li>
+        <li class="nav-item"><button class="nav-link" onclick="showTab('settle',this)"><i
+              class="bi bi-arrows-exchange me-1" aria-hidden="true"></i>Settle up</button></li>
+      </ul>
+      <button class="btn btn-sm btn-outline-danger ms-2 flex-shrink-0" onclick="resetAll()"><i class="bi bi-trash me-1"
+          aria-hidden="true"></i>Reset</button>
     </div>
 
-    <div id="expense-list"></div>
+    <div id="tab-people">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" id="person-name" placeholder="Add a person…"
+              onkeydown="if(event.key==='Enter')addPerson()">
+            <button class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="addPerson()"><i class="bi bi-plus"
+                aria-hidden="true"></i></button>
+          </div>
+        </div>
+      </div>
+      <div id="people-list" class="d-flex flex-wrap gap-2"></div>
+    </div>
+
+    <div id="tab-expenses" style="display:none">
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex flex-column gap-2 mb-2">
+            <input type="text" class="form-control form-control-sm" id="exp-desc" placeholder="Description"
+              maxlength="50">
+            <div class="d-flex gap-2">
+              <input type="number" class="form-control form-control-sm" id="exp-amount" placeholder="£ Amount" min="0"
+                step="0.01">
+              <select class="form-select form-select-sm" id="exp-payer">
+                <option value="">Paid by…</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-2">
+            <div style="font-size:12px;color:#888;margin-bottom:4px">Split between (blank = everyone):</div>
+            <div id="split-chips"></div>
+          </div>
+          <button class="btn btn-sm btn-outline-primary w-100 mt-1" onclick="addExpense()"><i class="bi bi-plus me-1"
+              aria-hidden="true"></i>Add expense</button>
+        </div>
+      </div>
+
+      <div id="edit-panel" style="display:none" class="edit-panel">
+        <div style="font-size:14px;font-weight:500;margin-bottom:10px">Edit expense</div>
+        <div class="d-flex flex-column gap-2 mb-2">
+          <input type="text" class="form-control form-control-sm" id="edit-desc" placeholder="Description">
+          <div class="d-flex gap-2">
+            <input type="number" class="form-control form-control-sm" id="edit-amount" placeholder="£ Amount">
+            <select class="form-select form-select-sm" id="edit-payer"></select>
+          </div>
+        </div>
+        <div class="mb-2">
+          <div style="font-size:12px;color:#888;margin-bottom:4px">Split between:</div>
+          <div id="edit-split-chips"></div>
+        </div>
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-primary flex-fill" onclick="saveEdit()">Save</button>
+          <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+
+      <div id="expense-list"></div>
+    </div>
+
+    <div id="tab-settle" style="display:none">
+      <div id="settle-result"></div>
+    </div>
   </div>
 
-  <div id="tab-settle" style="display:none">
-    <div id="settle-result"></div>
-  </div>
-</div>
-<body>
-<script>
-let people=[], expenses=[], selectedSplit=new Set(), editId=null, editSplit=new Set();
+  <body>
+    <script>
+      let people = [], expenses = [], selectedSplit = new Set(), editId = null, editSplit = new Set();
 
-function save(){try{localStorage.setItem('trip_people',JSON.stringify(people));localStorage.setItem('trip_expenses',JSON.stringify(expenses));}catch(e){}}
-function load(){try{const p=localStorage.getItem('trip_people'),e=localStorage.getItem('trip_expenses');if(p)people=JSON.parse(p);if(e)expenses=JSON.parse(e);}catch(e){}}
+      function save() { try { localStorage.setItem('trip_people', JSON.stringify(people)); localStorage.setItem('trip_expenses', JSON.stringify(expenses)); } catch (e) { } }
+      function load() { try { const p = localStorage.getItem('trip_people'), e = localStorage.getItem('trip_expenses'); if (p) people = JSON.parse(p); if (e) expenses = JSON.parse(e); } catch (e) { } }
 
-// Called after every mutation — saves and refreshes all panels
-function onUpdate(){
-  save();
-  renderPeople();
-  renderPayerSelect('exp-payer');
-  renderSplitChips();
-  renderExpenses();
-  renderSettle(); // always kept up to date
-}
+      // Called after every mutation — saves and refreshes all panels
+      function onUpdate() {
+        save();
+        renderPeople();
+        renderPayerSelect('exp-payer');
+        renderSplitChips();
+        renderExpenses();
+        renderSettle(); // always kept up to date
+      }
 
-function resetAll(){
-  if(!confirm('Clear all people and expenses?'))return;
-  people=[];expenses=[];onUpdate();
-}
+      function resetAll() {
+        if (!confirm('Clear all people and expenses?')) return;
+        people = []; expenses = []; onUpdate();
+      }
 
-function showTab(name,btn){
-  ['people','expenses','settle'].forEach(t=>document.getElementById('tab-'+t).style.display=t===name?'':'none');
-  document.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
+      function showTab(name, btn) {
+        ['people', 'expenses', 'settle'].forEach(t => document.getElementById('tab-' + t).style.display = t === name ? '' : 'none');
+        document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      }
 
-function addPerson(){
-  const inp=document.getElementById('person-name'),name=inp.value.trim();
-  if(!name||people.includes(name))return;
-  people.push(name);inp.value='';onUpdate();
-}
-function removePerson(name){
-  people=people.filter(p=>p!==name);
-  expenses=expenses.filter(e=>e.payer!==name);
-  onUpdate();
-}
-function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-function renderPeople(){
-  document.getElementById('people-list').innerHTML=people.map(p=>`
+      function addPerson() {
+        const inp = document.getElementById('person-name'), name = inp.value.trim();
+        if (!name || people.includes(name)) return;
+        people.push(name); inp.value = ''; onUpdate();
+      }
+      function removePerson(name) {
+        people = people.filter(p => p !== name);
+        expenses = expenses.filter(e => e.payer !== name);
+        onUpdate();
+      }
+      function initials(n) { return n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }
+      function renderPeople() {
+        document.getElementById('people-list').innerHTML = people.map(p => `
     <div class="d-flex align-items-center gap-1 border rounded px-2 py-1" style="font-size:13px;background:#fff">
       <span class="avatar">${initials(p)}</span>${p}
       <button class="btn-icon ms-1" onclick="removePerson('${p}')" aria-label="Remove ${p}"><i class="bi bi-x" style="font-size:13px" aria-hidden="true"></i></button>
     </div>`).join('');
-}
-function renderPayerSelect(id){
-  const sel=document.getElementById(id),cur=sel.value;
-  sel.innerHTML='<option value="">Paid by…</option>'+people.map(p=>`<option${p===cur?' selected':''}>${p}</option>`).join('');
-}
-function renderSplitChips(){
-  document.getElementById('split-chips').innerHTML=people.map(p=>`<span class="pchip${selectedSplit.has(p)?' sel':''}" onclick="toggleSplit('${p}','add')">${p}</span>`).join('');
-}
-function toggleSplit(name,mode){
-  const s=mode==='add'?selectedSplit:editSplit;
-  s.has(name)?s.delete(name):s.add(name);
-  mode==='add'?renderSplitChips():renderEditSplitChips();
-}
-function addExpense(){
-  const desc=document.getElementById('exp-desc').value.trim();
-  const amount=parseFloat(document.getElementById('exp-amount').value);
-  const payer=document.getElementById('exp-payer').value;
-  if(!desc||isNaN(amount)||amount<=0||!payer){alert('Fill in all fields.');return;}
-  const split=selectedSplit.size>0?[...selectedSplit]:[...people];
-  expenses.push({id:Date.now(),desc,amount,payer,split});
-  document.getElementById('exp-desc').value='';
-  document.getElementById('exp-amount').value='';
-  selectedSplit.clear();onUpdate();
-}
-function renderExpenses(){
-  const el=document.getElementById('expense-list');
-  if(!expenses.length){el.innerHTML='<p style="font-size:13px;color:#888">No expenses yet.</p>';return;}
-  el.innerHTML=expenses.map(e=>`
+      }
+      function renderPayerSelect(id) {
+        const sel = document.getElementById(id), cur = sel.value;
+        sel.innerHTML = '<option value="">Paid by…</option>' + people.map(p => `<option${p === cur ? ' selected' : ''}>${p}</option>`).join('');
+      }
+      function renderSplitChips() {
+        document.getElementById('split-chips').innerHTML = people.map(p => `<span class="pchip${selectedSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${p}','add')">${p}</span>`).join('');
+      }
+      function toggleSplit(name, mode) {
+        const s = mode === 'add' ? selectedSplit : editSplit;
+        s.has(name) ? s.delete(name) : s.add(name);
+        mode === 'add' ? renderSplitChips() : renderEditSplitChips();
+      }
+      function addExpense() {
+        const desc = document.getElementById('exp-desc').value.trim();
+        const amount = parseFloat(document.getElementById('exp-amount').value);
+        const payer = document.getElementById('exp-payer').value;
+        if (!desc || isNaN(amount) || amount <= 0 || !payer) { alert('Fill in all fields.'); return; }
+        const split = selectedSplit.size > 0 ? [...selectedSplit] : [...people];
+        expenses.push({ id: Date.now(), desc, amount, payer, split });
+        document.getElementById('exp-desc').value = '';
+        document.getElementById('exp-amount').value = '';
+        selectedSplit.clear(); onUpdate();
+      }
+      function renderExpenses() {
+        const el = document.getElementById('expense-list');
+        if (!expenses.length) { el.innerHTML = '<p style="font-size:13px;color:#888">No expenses yet.</p>'; return; }
+        el.innerHTML = expenses.map(e => `
     <div class="expense-card">
       <div class="d-flex align-items-start justify-content-between gap-2">
         <div style="min-width:0">
@@ -186,76 +335,76 @@ function renderExpenses(){
         </div>
       </div>
     </div>`).join('');
-}
-function removeExpense(id){expenses=expenses.filter(e=>e.id!==id);onUpdate();}
-function startEdit(id){
-  const e=expenses.find(x=>x.id===id);if(!e)return;
-  editId=id;editSplit=new Set(e.split);
-  document.getElementById('edit-desc').value=e.desc;
-  document.getElementById('edit-amount').value=e.amount;
-  renderPayerSelect('edit-payer');
-  document.getElementById('edit-payer').value=e.payer;
-  renderEditSplitChips();
-  document.getElementById('edit-panel').style.display='';
-  document.getElementById('edit-panel').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-function renderEditSplitChips(){
-  document.getElementById('edit-split-chips').innerHTML=people.map(p=>`<span class="pchip${editSplit.has(p)?' sel':''}" onclick="toggleSplit('${p}','edit')">${p}</span>`).join('');
-}
-function saveEdit(){
-  const desc=document.getElementById('edit-desc').value.trim();
-  const amount=parseFloat(document.getElementById('edit-amount').value);
-  const payer=document.getElementById('edit-payer').value;
-  if(!desc||isNaN(amount)||amount<=0||!payer)return;
-  const split=editSplit.size>0?[...editSplit]:[...people];
-  const idx=expenses.findIndex(x=>x.id===editId);
-  if(idx>-1)expenses[idx]={id:editId,desc,amount,payer,split};
-  editId=null;editSplit=new Set();
-  document.getElementById('edit-panel').style.display='none';
-  onUpdate();
-}
-function cancelEdit(){
-  editId=null;editSplit=new Set();
-  document.getElementById('edit-panel').style.display='none';
-}
-function renderSettle(){
-  const el=document.getElementById('settle-result');
-  if(people.length<2){el.innerHTML='<p style="color:#888">Add at least 2 people first.</p>';return;}
-  if(!expenses.length){el.innerHTML='<p style="color:#888">No expenses added yet.</p>';return;}
-  const bal={};people.forEach(p=>bal[p]=0);
-  expenses.forEach(e=>{
-    const share=e.amount/e.split.length;
-    e.split.forEach(p=>bal[p]-=share);
-    bal[e.payer]+=e.amount;
-  });
-  const total=expenses.reduce((s,e)=>s+e.amount,0);
-  const summaryHTML=`
+      }
+      function removeExpense(id) { expenses = expenses.filter(e => e.id !== id); onUpdate(); }
+      function startEdit(id) {
+        const e = expenses.find(x => x.id === id); if (!e) return;
+        editId = id; editSplit = new Set(e.split);
+        document.getElementById('edit-desc').value = e.desc;
+        document.getElementById('edit-amount').value = e.amount;
+        renderPayerSelect('edit-payer');
+        document.getElementById('edit-payer').value = e.payer;
+        renderEditSplitChips();
+        document.getElementById('edit-panel').style.display = '';
+        document.getElementById('edit-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      function renderEditSplitChips() {
+        document.getElementById('edit-split-chips').innerHTML = people.map(p => `<span class="pchip${editSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${p}','edit')">${p}</span>`).join('');
+      }
+      function saveEdit() {
+        const desc = document.getElementById('edit-desc').value.trim();
+        const amount = parseFloat(document.getElementById('edit-amount').value);
+        const payer = document.getElementById('edit-payer').value;
+        if (!desc || isNaN(amount) || amount <= 0 || !payer) return;
+        const split = editSplit.size > 0 ? [...editSplit] : [...people];
+        const idx = expenses.findIndex(x => x.id === editId);
+        if (idx > -1) expenses[idx] = { id: editId, desc, amount, payer, split };
+        editId = null; editSplit = new Set();
+        document.getElementById('edit-panel').style.display = 'none';
+        onUpdate();
+      }
+      function cancelEdit() {
+        editId = null; editSplit = new Set();
+        document.getElementById('edit-panel').style.display = 'none';
+      }
+      function renderSettle() {
+        const el = document.getElementById('settle-result');
+        if (people.length < 2) { el.innerHTML = '<p style="color:#888">Add at least 2 people first.</p>'; return; }
+        if (!expenses.length) { el.innerHTML = '<p style="color:#888">No expenses added yet.</p>'; return; }
+        const bal = {}; people.forEach(p => bal[p] = 0);
+        expenses.forEach(e => {
+          const share = e.amount / e.split.length;
+          e.split.forEach(p => bal[p] -= share);
+          bal[e.payer] += e.amount;
+        });
+        const total = expenses.reduce((s, e) => s + e.amount, 0);
+        const summaryHTML = `
     <div class="d-flex gap-2 mb-3 flex-wrap">
-      ${people.map(p=>`
+      ${people.map(p => `
         <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:8px 12px;min-width:90px">
           <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">${p}</div>
-          <div style="font-size:15px;font-weight:600;color:${bal[p]>0.01?'#1a6b2f':bal[p]<-0.01?'#c0392b':'#444'}">${bal[p]>0.01?'+':''}£${Math.abs(bal[p]).toFixed(2)}</div>
-          <div style="font-size:11px;color:#aaa">${bal[p]>0.01?'gets back':bal[p]<-0.01?'owes':'settled'}</div>
+          <div style="font-size:15px;font-weight:600;color:${bal[p] > 0.01 ? '#1a6b2f' : bal[p] < -0.01 ? '#c0392b' : '#444'}">${bal[p] > 0.01 ? '+' : ''}£${Math.abs(bal[p]).toFixed(2)}</div>
+          <div style="font-size:11px;color:#aaa">${bal[p] > 0.01 ? 'gets back' : bal[p] < -0.01 ? 'owes' : 'settled'}</div>
         </div>`).join('')}
     </div>
     <div style="font-size:12px;color:#aaa;margin-bottom:12px">Total spend: £${total.toFixed(2)}</div>`;
-  const pos=[],neg=[];
-  Object.entries(bal).forEach(([p,v])=>{
-    if(v>0.005)pos.push({p,v});
-    else if(v<-0.005)neg.push({p,v:-v});
-  });
-  const transfers=[];
-  const p2=[...pos],n2=[...neg];
-  while(p2.length&&n2.length){
-    const cr=p2[0],db=n2[0],amt=Math.min(cr.v,db.v);
-    transfers.push({from:db.p,to:cr.p,amt});
-    cr.v-=amt;db.v-=amt;
-    if(cr.v<0.005)p2.shift();
-    if(db.v<0.005)n2.shift();
-  }
-  const transfersHTML=transfers.length
-    ?`<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:8px">Transfers</div>`
-      +transfers.map(t=>`
+        const pos = [], neg = [];
+        Object.entries(bal).forEach(([p, v]) => {
+          if (v > 0.005) pos.push({ p, v });
+          else if (v < -0.005) neg.push({ p, v: -v });
+        });
+        const transfers = [];
+        const p2 = [...pos], n2 = [...neg];
+        while (p2.length && n2.length) {
+          const cr = p2[0], db = n2[0], amt = Math.min(cr.v, db.v);
+          transfers.push({ from: db.p, to: cr.p, amt });
+          cr.v -= amt; db.v -= amt;
+          if (cr.v < 0.005) p2.shift();
+          if (db.v < 0.005) n2.shift();
+        }
+        const transfersHTML = transfers.length
+          ? `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:8px">Transfers</div>`
+          + transfers.map(t => `
         <div class="transfer-card">
           <span class="avatar">${initials(t.from)}</span>
           <span style="font-size:14px;font-weight:500">${t.from}</span>
@@ -264,10 +413,11 @@ function renderSettle(){
           <span style="font-size:14px;font-weight:500">${t.to}</span>
           <span class="amount">£${t.amt.toFixed(2)}</span>
         </div>`).join('')
-    :`<div style="background:#eaf3de;border-radius:8px;padding:10px 14px;color:#3B6D11;font-size:14px"><i class="bi bi-circle-check me-1" aria-hidden="true"></i>Everyone is settled up!</div>`;
-  el.innerHTML=summaryHTML+transfersHTML;
-}
+          : `<div style="background:#eaf3de;border-radius:8px;padding:10px 14px;color:#3B6D11;font-size:14px"><i class="bi bi-circle-check me-1" aria-hidden="true"></i>Everyone is settled up!</div>`;
+        el.innerHTML = summaryHTML + transfersHTML;
+      }
 
-load();onUpdate();
-</script>
+      load(); onUpdate();
+    </script>
+
 </html>
