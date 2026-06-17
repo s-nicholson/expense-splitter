@@ -245,6 +245,12 @@
     </div>
 
     <div id="tab-settle" style="display:none">
+      <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="copyText()"><i
+            class="bi bi-clipboard me-1" aria-hidden="true"></i>Copy to clipboard</button>
+        <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="copySheets()"><i class="bi bi-table me-1"
+            aria-hidden="true"></i>Copy for Sheets</button>
+      </div>
       <div id="settle-result"></div>
     </div>
   </div>
@@ -415,6 +421,84 @@
         </div>`).join('')
           : `<div style="background:#eaf3de;border-radius:8px;padding:10px 14px;color:#3B6D11;font-size:14px"><i class="bi bi-circle-check me-1" aria-hidden="true"></i>Everyone is settled up!</div>`;
         el.innerHTML = summaryHTML + transfersHTML;
+      }
+
+      function calcSettleData() {
+        const bal = {}; people.forEach(p => bal[p] = 0);
+        expenses.forEach(e => {
+          const share = e.amount / e.split.length;
+          e.split.forEach(p => bal[p] -= share);
+          bal[e.payer] += e.amount;
+        });
+        const pos = [], neg = [];
+        Object.entries(bal).forEach(([p, v]) => {
+          if (v > 0.005) pos.push({ p, v });
+          else if (v < -0.005) neg.push({ p, v: -v });
+        });
+        const transfers = [];
+        const p2 = [...pos], n2 = [...neg];
+        while (p2.length && n2.length) {
+          const cr = p2[0], db = n2[0], amt = Math.min(cr.v, db.v);
+          transfers.push({ from: db.p, to: cr.p, amt });
+          cr.v -= amt; db.v -= amt;
+          if (cr.v < 0.005) p2.shift();
+          if (db.v < 0.005) n2.shift();
+        }
+        const total = expenses.reduce((s, e) => s + e.amount, 0);
+        return { bal, transfers, total };
+      }
+
+      async function copyToClipboard(text, btn) {
+        try {
+          await navigator.clipboard.writeText(text);
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+          btn.classList.add('btn-success'); btn.classList.remove('btn-outline-secondary');
+          setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('btn-success'); btn.classList.add('btn-outline-secondary'); }, 2000);
+        } catch (e) { alert('Copy failed — try long-pressing the text instead.'); }
+      }
+
+      function copyText() {
+        if (people.length < 2 || !expenses.length) return;
+        const { bal, transfers, total } = calcSettleData();
+        const lines = ['💸 *Trip expenses*', ''];
+        lines.push('*Balances:*');
+        people.forEach(p => {
+          const v = bal[p];
+          const icon = v > 0.01 ? '✅' : v < -0.01 ? '🔴' : '⚪';
+          lines.push(`${icon} ${p}: ${v > 0.01 ? '+' : ''}£${Math.abs(v).toFixed(2)} ${v > 0.01 ? '(gets back)' : v < -0.01 ? '(owes)' : '(settled)'}`);
+        });
+        lines.push('');
+        lines.push(`*Total spend: £${total.toFixed(2)}*`);
+        if (transfers.length) {
+          lines.push('');
+          lines.push('*Transfers needed:*');
+          transfers.forEach(t => lines.push(`  ${t.from} → ${t.to}: £${t.amt.toFixed(2)}`));
+        } else {
+          lines.push(''); lines.push('✅ Everyone is settled up!');
+        }
+        copyToClipboard(lines.join('\n'), event.currentTarget);
+      }
+
+      function copySheets() {
+        if (!expenses.length) return;
+        const rows = [['Description', 'Amount', 'Paid by', 'Split between']];
+        expenses.forEach(e => rows.push([e.desc, e.amount.toFixed(2), e.payer, e.split.join(', ')]));
+        rows.push([]);
+        const { bal, transfers, total } = calcSettleData();
+        rows.push(['--- Settlement ---', '', '', '']);
+        rows.push(['Person', 'Balance', 'Status', '']);
+        people.forEach(p => {
+          const v = bal[p];
+          rows.push([p, (v > 0 ? '+' : '') + v.toFixed(2), v > 0.01 ? 'gets back' : v < -0.01 ? 'owes' : 'settled', '']);
+        });
+        rows.push(['Total', total.toFixed(2), '', '']);
+        if (transfers.length) {
+          rows.push([]);
+          rows.push(['From', 'To', 'Amount', '']);
+          transfers.forEach(t => rows.push([t.from, t.to, t.amt.toFixed(2), '']));
+        }
+        copyToClipboard(rows.map(r => r.join('\t')).join('\n'), event.currentTarget);
       }
 
       load(); onUpdate();
