@@ -1,9 +1,13 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta charset="utf-8">
+  <title>Expense Splitter</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
   <style>
     * {
       box-sizing: border-box
@@ -17,7 +21,183 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important
     }
 
-    /* Nav */
+    /* Layout */
+    #app {
+      display: flex;
+      height: 100dvh;
+      overflow: hidden
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: #f8f9fa;
+      border-right: 1px solid #dee2e6;
+      display: flex;
+      flex-direction: column;
+      transition: transform .25s ease;
+      overflow: hidden
+    }
+
+    #sidebar.collapsed {
+      width: 0;
+      border: none
+    }
+
+    #sidebar-inner {
+      width: 240px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden
+    }
+
+    .sidebar-header {
+      padding: 14px 12px 10px;
+      border-bottom: 1px solid #dee2e6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between
+    }
+
+    .sidebar-header h6 {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: .05em
+    }
+
+    #trip-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px
+    }
+
+    .trip-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #333;
+      min-height: 40px
+    }
+
+    .trip-item:hover {
+      background: #e9ecef
+    }
+
+    .trip-item.active {
+      background: #E6F1FB;
+      color: #0C447C;
+      font-weight: 500
+    }
+
+    .trip-item .trip-name {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    .trip-item .btn-icon-sm {
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: none;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #888;
+      cursor: pointer
+    }
+
+    .trip-item .btn-icon-sm:hover {
+      background: #dee2e6;
+      color: #333
+    }
+
+    .sidebar-footer {
+      padding: 8px
+    }
+
+    /* Overlay for mobile */
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .35);
+      z-index: 100
+    }
+
+    #sidebar-overlay.show {
+      display: block
+    }
+
+    @media(max-width:640px) {
+      #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 101;
+        transform: translateX(-100%)
+      }
+
+      #sidebar.open {
+        transform: translateX(0)
+      }
+
+      #sidebar.collapsed {
+        transform: translateX(-100%);
+        width: 240px
+      }
+    }
+
+    /* Main area */
+    #main {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      min-width: 0
+    }
+
+    #topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #dee2e6;
+      background: #fff;
+      flex-shrink: 0
+    }
+
+    #trip-title {
+      font-size: 16px;
+      font-weight: 600;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap
+    }
+
+    #content {
+      padding: 12px;
+      flex: 1
+    }
+
+    /* Nav tabs */
     .nav-tabs .nav-link {
       color: #555;
       font-size: 14px;
@@ -32,7 +212,7 @@
       font-weight: 500
     }
 
-    /* Chips — larger tap targets */
+    /* Chips */
     .pchip {
       display: inline-flex;
       align-items: center;
@@ -70,7 +250,7 @@
       flex-shrink: 0
     }
 
-    /* Expense card */
+    /* Cards */
     .expense-card {
       background: #fff;
       border: 1px solid #ddd;
@@ -85,7 +265,7 @@
       margin-top: 4px
     }
 
-    /* Icon buttons — 44px touch targets */
+    /* Icon buttons */
     .btn-icon {
       background: none;
       border: none;
@@ -115,7 +295,7 @@
       background: #fdecea
     }
 
-    /* Transfer card — wraps on small screens */
+    /* Transfer */
     .transfer-card {
       display: flex;
       align-items: center;
@@ -144,16 +324,7 @@
       margin-bottom: 1rem
     }
 
-    /* Stack payer/amount on very small screens */
-    @media(max-width:380px) {
-
-      .d-flex.gap-2:has(#exp-amount),
-      .d-flex.gap-2:has(#edit-amount) {
-        flex-direction: column
-      }
-    }
-
-    /* Comfortable form controls */
+    /* Forms */
     .form-control,
     .form-select {
       min-height: 44px;
@@ -167,341 +338,527 @@
     .btn-sm {
       min-height: 40px
     }
+
+    @media(max-width:380px) {
+
+      .d-flex.gap-2:has(#exp-amount),
+      .d-flex.gap-2:has(#edit-amount) {
+        flex-direction: column
+      }
+    }
+
+    /* Empty state */
+    #no-trip {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      color: #aaa;
+      gap: 12px;
+      text-align: center;
+      padding: 40px
+    }
   </style>
 </head>
 
 <body>
-  <div class="p-2 p-sm-3">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <ul class="nav nav-tabs mb-0 flex-grow-1" style="border-bottom:none">
-        <li class="nav-item"><button class="nav-link active" onclick="showTab('people',this)"><i
-              class="bi bi-users me-1" aria-hidden="true"></i>People</button></li>
-        <li class="nav-item"><button class="nav-link" onclick="showTab('expenses',this)"><i class="bi bi-receipt me-1"
-              aria-hidden="true"></i>Expenses</button></li>
-        <li class="nav-item"><button class="nav-link" onclick="showTab('settle',this)"><i
-              class="bi bi-arrows-exchange me-1" aria-hidden="true"></i>Settle up</button></li>
-      </ul>
-      <button class="btn btn-sm btn-outline-danger ms-2 flex-shrink-0" onclick="resetAll()"><i class="bi bi-trash me-1"
-          aria-hidden="true"></i>Reset</button>
-    </div>
+  <div id="app">
 
-    <div id="tab-people">
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="d-flex gap-2">
-            <input type="text" class="form-control form-control-sm" id="person-name" placeholder="Add a person…"
-              onkeydown="if(event.key==='Enter')addPerson()">
-            <button class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="addPerson()"><i class="bi bi-plus"
-                aria-hidden="true"></i></button>
-          </div>
+    <!-- Sidebar -->
+    <div id="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div id="sidebar" class="collapsed">
+      <div id="sidebar-inner">
+        <div class="sidebar-header">
+          <h6>Trips</h6>
+          <button class="btn-icon-sm" onclick="closeSidebar()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <div id="trip-list"></div>
+        <div class="sidebar-footer">
+          <button class="btn btn-sm btn-outline-primary w-100" onclick="newTrip()"><i class="bi bi-plus me-1"></i>New
+            trip</button>
         </div>
       </div>
-      <div id="people-list" class="d-flex flex-wrap gap-2"></div>
     </div>
 
-    <div id="tab-expenses" style="display:none">
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="d-flex flex-column gap-2 mb-2">
-            <input type="text" class="form-control form-control-sm" id="exp-desc" placeholder="Description"
-              maxlength="50">
-            <div class="d-flex gap-2">
-              <input type="number" class="form-control form-control-sm" id="exp-amount" placeholder="£ Amount" min="0"
-                step="0.01">
-              <select class="form-select form-select-sm" id="exp-payer">
-                <option value="">Paid by…</option>
-              </select>
+    <!-- Main -->
+    <div id="main">
+      <div id="topbar">
+        <button class="btn-icon" onclick="toggleSidebar()" aria-label="Trips menu"><i class="bi bi-list"
+            style="font-size:22px"></i></button>
+        <span id="trip-title">Select a trip</span>
+        <button class="btn-icon" id="share-btn" onclick="shareTrip()" aria-label="Share trip" title="Share trip URL"
+          style="display:none"><i class="bi bi-share"></i></button>
+        <button class="btn-icon danger" id="reset-btn" onclick="resetAll()" aria-label="Reset trip"
+          style="display:none"><i class="bi bi-trash"></i></button>
+      </div>
+
+      <div id="content">
+        <!-- No trip selected -->
+        <div id="no-trip">
+          <i class="bi bi-suitcase" style="font-size:48px;opacity:.3"></i>
+          <div>Open the menu to select or create a trip</div>
+          <button class="btn btn-primary" onclick="toggleSidebar();setTimeout(()=>newTrip(),300)">
+            <i class="bi bi-plus me-1"></i>New trip
+          </button>
+        </div>
+
+        <!-- Trip UI (hidden until trip selected) -->
+        <div id="trip-ui" style="display:none">
+          <div class="d-flex align-items-center mb-3" style="gap:0">
+            <ul class="nav nav-tabs mb-0 flex-grow-1" style="border-bottom:none">
+              <li class="nav-item"><button class="nav-link active" onclick="showTab('people',this)"><i
+                    class="bi bi-people me-1" aria-hidden="true"></i>Add People</button></li>
+              <li class="nav-item"><button class="nav-link" onclick="showTab('expenses',this)"><i
+                    class="bi bi-receipt me-1" aria-hidden="true"></i>Add Expenses</button></li>
+              <li class="nav-item"><button class="nav-link" onclick="showTab('settle',this)"><i
+                    class="bi bi-arrows-exchange me-1" aria-hidden="true"></i>Settle Up</button></li>
+            </ul>
+          </div>
+
+          <!-- People tab -->
+          <div id="tab-people">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex gap-2">
+                  <input type="text" class="form-control form-control-sm" id="person-name" placeholder="Add a person…"
+                    onkeydown="if(event.key==='Enter')addPerson()">
+                  <button class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="addPerson()"><i
+                      class="bi bi-plus"></i></button>
+                </div>
+              </div>
             </div>
+            <div id="people-list" class="d-flex flex-wrap gap-2"></div>
           </div>
-          <div class="mb-2">
-            <div style="font-size:12px;color:#888;margin-bottom:4px">Split between (blank = everyone):</div>
-            <div id="split-chips"></div>
+
+          <!-- Expenses tab -->
+          <div id="tab-expenses" style="display:none">
+            <div class="card mb-3">
+              <div class="card-body">
+                <div class="d-flex flex-column gap-2 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="exp-desc" placeholder="Description"
+                    maxlength="50">
+                  <div class="d-flex gap-2">
+                    <input type="number" class="form-control form-control-sm" id="exp-amount" placeholder="£ Amount"
+                      min="0" step="0.01">
+                    <select class="form-select form-select-sm" id="exp-payer">
+                      <option value="">Paid by…</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <div style="font-size:12px;color:#888;margin-bottom:4px">Split between (blank = everyone):</div>
+                  <div id="split-chips"></div>
+                </div>
+                <button class="btn btn-sm btn-outline-primary w-100 mt-1" onclick="addExpense()"><i
+                    class="bi bi-plus me-1"></i>Add expense</button>
+              </div>
+            </div>
+            <div id="edit-panel" style="display:none" class="edit-panel">
+              <div style="font-size:14px;font-weight:500;margin-bottom:10px">Edit expense</div>
+              <div class="d-flex flex-column gap-2 mb-2">
+                <input type="text" class="form-control form-control-sm" id="edit-desc" placeholder="Description">
+                <div class="d-flex gap-2">
+                  <input type="number" class="form-control form-control-sm" id="edit-amount" placeholder="£ Amount">
+                  <select class="form-select form-select-sm" id="edit-payer"></select>
+                </div>
+              </div>
+              <div class="mb-2">
+                <div style="font-size:12px;color:#888;margin-bottom:4px">Split between:</div>
+                <div id="edit-split-chips"></div>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-primary flex-fill" onclick="saveEdit()">Save</button>
+                <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="cancelEdit()">Cancel</button>
+              </div>
+            </div>
+            <div id="expense-list"></div>
           </div>
-          <button class="btn btn-sm btn-outline-primary w-100 mt-1" onclick="addExpense()"><i class="bi bi-plus me-1"
-              aria-hidden="true"></i>Add expense</button>
+
+          <!-- Settle tab -->
+          <div id="tab-settle" style="display:none">
+            <div class="d-flex gap-2 mb-3">
+              <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="copyMessage()"><i
+                  class="bi bi-clipboard me-1"></i>Copy to message</button>
+              <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="copySheets()"><i
+                  class="bi bi-table me-1"></i>Copy to sheets</button>
+            </div>
+            <div id="settle-result"></div>
+          </div>
         </div>
       </div>
-
-      <div id="edit-panel" style="display:none" class="edit-panel">
-        <div style="font-size:14px;font-weight:500;margin-bottom:10px">Edit expense</div>
-        <div class="d-flex flex-column gap-2 mb-2">
-          <input type="text" class="form-control form-control-sm" id="edit-desc" placeholder="Description">
-          <div class="d-flex gap-2">
-            <input type="number" class="form-control form-control-sm" id="edit-amount" placeholder="£ Amount">
-            <select class="form-select form-select-sm" id="edit-payer"></select>
-          </div>
-        </div>
-        <div class="mb-2">
-          <div style="font-size:12px;color:#888;margin-bottom:4px">Split between:</div>
-          <div id="edit-split-chips"></div>
-        </div>
-        <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-primary flex-fill" onclick="saveEdit()">Save</button>
-          <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="cancelEdit()">Cancel</button>
-        </div>
-      </div>
-
-      <div id="expense-list"></div>
-    </div>
-
-    <div id="tab-settle" style="display:none">
-      <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="copyText()"><i
-            class="bi bi-clipboard me-1" aria-hidden="true"></i>Copy to clipboard</button>
-        <button class="btn btn-sm btn-outline-secondary flex-fill" onclick="copySheets()"><i class="bi bi-table me-1"
-            aria-hidden="true"></i>Copy for Sheets</button>
-      </div>
-      <div id="settle-result"></div>
     </div>
   </div>
 
-  <body>
-    <script>
-      let people = [], expenses = [], selectedSplit = new Set(), editId = null, editSplit = new Set();
+  <script>
+    // ─── State ────────────────────────────────────────────────────────────────────
+    let trips = {};        // { [id]: { name, people, expenses } }
+    let currentId = null;  // active trip id
+    let people = [], expenses = [];
+    let selectedSplit = new Set(), editId = null, editSplit = new Set();
 
-      function save() { try { localStorage.setItem('trip_people', JSON.stringify(people)); localStorage.setItem('trip_expenses', JSON.stringify(expenses)); } catch (e) { } }
-      function load() { try { const p = localStorage.getItem('trip_people'), e = localStorage.getItem('trip_expenses'); if (p) people = JSON.parse(p); if (e) expenses = JSON.parse(e); } catch (e) { } }
+    // ─── Persistence ─────────────────────────────────────────────────────────────
+    function saveAll() {
+      try { localStorage.setItem('trips_v2', JSON.stringify(trips)); } catch (e) { }
+    }
+    function loadAll() {
+      try {
+        const raw = localStorage.getItem('trips_v2');
+        if (raw) trips = JSON.parse(raw);
+        // Migrate old single-trip data
+        const op = localStorage.getItem('trip_people'), oe = localStorage.getItem('trip_expenses');
+        if ((op || oe) && !Object.keys(trips).length) {
+          const id = uid();
+          trips[id] = { name: 'My trip', people: op ? JSON.parse(op) : [], expenses: oe ? JSON.parse(oe) : [] };
+          localStorage.removeItem('trip_people'); localStorage.removeItem('trip_expenses');
+          saveAll();
+        }
+      } catch (e) { }
+    }
+    function uid() { return Math.random().toString(36).slice(2, 10); }
 
-      // Called after every mutation — saves and refreshes all panels
-      function onUpdate() {
-        save();
-        renderPeople();
-        renderPayerSelect('exp-payer');
-        renderSplitChips();
-        renderExpenses();
-        renderSettle(); // always kept up to date
+    // ─── Trip management ─────────────────────────────────────────────────────────
+    function newTrip() {
+      const name = prompt('Trip name:', 'New trip'); if (!name) return;
+      const id = uid();
+      trips[id] = { name: name.trim(), people: [], expenses: [] };
+      saveAll();
+      selectTrip(id);
+      renderSidebar();
+      closeSidebar();
+    }
+    function selectTrip(id) {
+      if (!trips[id]) return;
+      currentId = id;
+      people = trips[id].people;
+      expenses = trips[id].expenses;
+      selectedSplit = new Set(); editId = null; editSplit = new Set();
+      document.getElementById('no-trip').style.display = 'none';
+      document.getElementById('trip-ui').style.display = '';
+      document.getElementById('trip-title').textContent = trips[id].name;
+      document.getElementById('share-btn').style.display = '';
+      document.getElementById('reset-btn').style.display = '';
+      // Reset to people tab
+      showTab('people', document.querySelector('.nav-link'));
+      renderSidebar();
+      onUpdate();
+    }
+    function renameTrip(id, e) {
+      e.stopPropagation();
+      const name = prompt('Rename trip:', trips[id].name); if (!name) return;
+      trips[id].name = name.trim();
+      if (currentId === id) document.getElementById('trip-title').textContent = trips[id].name;
+      saveAll(); renderSidebar();
+    }
+    function deleteTrip(id, e) {
+      e.stopPropagation();
+      if (!confirm(`Delete "${trips[id].name}"?`)) return;
+      delete trips[id];
+      saveAll();
+      if (currentId === id) {
+        currentId = null; people = []; expenses = [];
+        document.getElementById('no-trip').style.display = '';
+        document.getElementById('trip-ui').style.display = 'none';
+        document.getElementById('trip-title').textContent = 'Select a trip';
+        document.getElementById('share-btn').style.display = 'none';
+        document.getElementById('reset-btn').style.display = 'none';
       }
-
-      function resetAll() {
-        if (!confirm('Clear all people and expenses?')) return;
-        people = []; expenses = []; onUpdate();
+      renderSidebar();
+    }
+    function renderSidebar() {
+      const list = document.getElementById('trip-list');
+      const ids = Object.keys(trips);
+      if (!ids.length) {
+        list.innerHTML = '<div style="padding:12px;font-size:13px;color:#aaa;text-align:center">No trips yet</div>';
+        return;
       }
-
-      function showTab(name, btn) {
-        ['people', 'expenses', 'settle'].forEach(t => document.getElementById('tab-' + t).style.display = t === name ? '' : 'none');
-        document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      }
-
-      function addPerson() {
-        const inp = document.getElementById('person-name'), name = inp.value.trim();
-        if (!name || people.includes(name)) return;
-        people.push(name); inp.value = ''; onUpdate();
-      }
-      function removePerson(name) {
-        people = people.filter(p => p !== name);
-        expenses = expenses.filter(e => e.payer !== name);
-        onUpdate();
-      }
-      function initials(n) { return n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() }
-      function renderPeople() {
-        document.getElementById('people-list').innerHTML = people.map(p => `
-    <div class="d-flex align-items-center gap-1 border rounded px-2 py-1" style="font-size:13px;background:#fff">
-      <span class="avatar">${initials(p)}</span>${p}
-      <button class="btn-icon ms-1" onclick="removePerson('${p}')" aria-label="Remove ${p}"><i class="bi bi-x" style="font-size:13px" aria-hidden="true"></i></button>
+      list.innerHTML = ids.map(id => `
+    <div class="trip-item${id === currentId ? ' active' : ''}" onclick="selectTrip('${id}');closeSidebar()">
+      <i class="bi bi-suitcase" style="font-size:15px;flex-shrink:0"></i>
+      <span class="trip-name">${esc(trips[id].name)}</span>
+      <button class="btn-icon-sm" onclick="renameTrip('${id}',event)" title="Rename"><i class="bi bi-pencil"></i></button>
+      <button class="btn-icon-sm" onclick="deleteTrip('${id}',event)" title="Delete" style="color:#c0392b"><i class="bi bi-trash"></i></button>
     </div>`).join('');
+    }
+    function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    // ─── Sidebar toggle ───────────────────────────────────────────────────────────
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      const isMobile = window.innerWidth <= 640;
+      if (isMobile) {
+        const open = sb.classList.toggle('open');
+        document.getElementById('sidebar-overlay').classList.toggle('show', open);
+      } else {
+        sb.classList.toggle('collapsed');
       }
-      function renderPayerSelect(id) {
-        const sel = document.getElementById(id), cur = sel.value;
-        sel.innerHTML = '<option value="">Paid by…</option>' + people.map(p => `<option${p === cur ? ' selected' : ''}>${p}</option>`).join('');
+    }
+    function closeSidebar() {
+      document.getElementById('sidebar').classList.remove('open');
+      document.getElementById('sidebar').classList.add('collapsed');
+      document.getElementById('sidebar-overlay').classList.remove('show');
+    }
+
+    // ─── URL sharing ──────────────────────────────────────────────────────────────
+    function shareTrip() {
+      if (!currentId) return;
+      const data = { name: trips[currentId].name, people, expenses };
+      // LZString compress + base64url encode to keep URL short
+      const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(data));
+      const url = location.href.split('#')[0] + '#trip=' + compressed;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('share-btn');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i>';
+        setTimeout(() => btn.innerHTML = orig, 2000);
+      }).catch(() => prompt('Copy this link:', url));
+    }
+    function checkUrlTrip() {
+      const hash = location.hash;
+      if (!hash.startsWith('#trip=')) return;
+      try {
+        const compressed = hash.slice(6);
+        const data = JSON.parse(LZString.decompressFromEncodedURIComponent(compressed));
+        if (!data || !data.people) return;
+        const msg = `You've been sent a trip: "${data.name}"\n\n${data.people.length} people, ${data.expenses.length} expenses.\n\nImport it?`;
+        if (!confirm(msg)) { history.replaceState(null, '', location.pathname); return; }
+        // Check for existing trip with same name
+        const id = uid();
+        trips[id] = { name: data.name, people: data.people, expenses: data.expenses };
+        saveAll();
+        selectTrip(id);
+        renderSidebar();
+        history.replaceState(null, '', location.pathname);
+      } catch (e) { console.warn('Invalid trip URL'); }
+    }
+
+    // ─── Core update ─────────────────────────────────────────────────────────────
+    function onUpdate() {
+      if (currentId) {
+        trips[currentId].people = people;
+        trips[currentId].expenses = expenses;
+        saveAll();
       }
-      function renderSplitChips() {
-        document.getElementById('split-chips').innerHTML = people.map(p => `<span class="pchip${selectedSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${p}','add')">${p}</span>`).join('');
-      }
-      function toggleSplit(name, mode) {
-        const s = mode === 'add' ? selectedSplit : editSplit;
-        s.has(name) ? s.delete(name) : s.add(name);
-        mode === 'add' ? renderSplitChips() : renderEditSplitChips();
-      }
-      function addExpense() {
-        const desc = document.getElementById('exp-desc').value.trim();
-        const amount = parseFloat(document.getElementById('exp-amount').value);
-        const payer = document.getElementById('exp-payer').value;
-        if (!desc || isNaN(amount) || amount <= 0 || !payer) { alert('Fill in all fields.'); return; }
-        const split = selectedSplit.size > 0 ? [...selectedSplit] : [...people];
-        expenses.push({ id: Date.now(), desc, amount, payer, split });
-        document.getElementById('exp-desc').value = '';
-        document.getElementById('exp-amount').value = '';
-        selectedSplit.clear(); onUpdate();
-      }
-      function renderExpenses() {
-        const el = document.getElementById('expense-list');
-        if (!expenses.length) { el.innerHTML = '<p style="font-size:13px;color:#888">No expenses yet.</p>'; return; }
-        el.innerHTML = expenses.map(e => `
+      renderPeople();
+      renderPayerSelect('exp-payer');
+      renderSplitChips();
+      renderExpenses();
+      renderSettle();
+    }
+    function resetAll() {
+      if (!confirm('Clear all people and expenses for this trip?')) return;
+      people = []; expenses = []; onUpdate();
+    }
+    function showTab(name, btn) {
+      ['people', 'expenses', 'settle'].forEach(t => document.getElementById('tab-' + t).style.display = t === name ? '' : 'none');
+      document.querySelectorAll('.nav-link').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    // ─── People ───────────────────────────────────────────────────────────────────
+    function addPerson() {
+      const inp = document.getElementById('person-name'), name = inp.value.trim();
+      if (!name || people.includes(name)) return;
+      people.push(name); inp.value = ''; onUpdate();
+    }
+    function removePerson(name) {
+      people = people.filter(p => p !== name);
+      expenses = expenses.filter(e => e.payer !== name);
+      onUpdate();
+    }
+    function initials(n) { return n.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase(); }
+    function renderPeople() {
+      document.getElementById('people-list').innerHTML = people.map(p => `
+    <div class="d-flex align-items-center gap-1 border rounded px-2 py-1" style="font-size:13px;background:#fff">
+      <span class="avatar">${initials(p)}</span>${esc(p)}
+      <button class="btn-icon ms-1" onclick="removePerson('${esc(p)}')" aria-label="Remove ${esc(p)}"><i class="bi bi-x" style="font-size:13px"></i></button>
+    </div>`).join('');
+    }
+
+    // ─── Payer select & split chips ───────────────────────────────────────────────
+    function renderPayerSelect(id) {
+      const sel = document.getElementById(id), cur = sel.value;
+      sel.innerHTML = '<option value="">Paid by…</option>' + people.map(p => `<option${p === cur ? ' selected' : ''}>${esc(p)}</option>`).join('');
+    }
+    function renderSplitChips() {
+      document.getElementById('split-chips').innerHTML = people.map(p =>
+        `<span class="pchip${selectedSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${esc(p)}','add')">${esc(p)}</span>`).join('');
+    }
+    function toggleSplit(name, mode) {
+      const s = mode === 'add' ? selectedSplit : editSplit;
+      s.has(name) ? s.delete(name) : s.add(name);
+      mode === 'add' ? renderSplitChips() : renderEditSplitChips();
+    }
+
+    // ─── Expenses ─────────────────────────────────────────────────────────────────
+    function addExpense() {
+      const desc = document.getElementById('exp-desc').value.trim();
+      const amount = parseFloat(document.getElementById('exp-amount').value);
+      const payer = document.getElementById('exp-payer').value;
+      if (!desc || isNaN(amount) || amount <= 0 || !payer) { alert('Fill in all fields.'); return; }
+      const split = selectedSplit.size > 0 ? [...selectedSplit] : [...people];
+      expenses.push({ id: Date.now(), desc, amount, payer, split });
+      document.getElementById('exp-desc').value = '';
+      document.getElementById('exp-amount').value = '';
+      selectedSplit.clear(); onUpdate();
+    }
+    function renderExpenses() {
+      const el = document.getElementById('expense-list');
+      if (!expenses.length) { el.innerHTML = '<p style="font-size:13px;color:#888">No expenses yet.</p>'; return; }
+      el.innerHTML = expenses.map(e => `
     <div class="expense-card">
       <div class="d-flex align-items-start justify-content-between gap-2">
         <div style="min-width:0">
-          <div style="font-weight:500;font-size:14px">${e.desc}</div>
-          <div class="meta">Paid by ${e.payer} · split: ${e.split.join(', ')}</div>
+          <div style="font-weight:500;font-size:14px">${esc(e.desc)}</div>
+          <div class="meta">Paid by ${esc(e.payer)} · split: ${e.split.map(esc).join(', ')}</div>
         </div>
         <div class="d-flex align-items-center gap-1 flex-shrink-0">
           <span style="font-weight:500;font-size:14px;margin-right:4px">£${e.amount.toFixed(2)}</span>
-          <button class="btn-icon" onclick="startEdit(${e.id})" aria-label="Edit"><i class="bi bi-pencil" aria-hidden="true"></i></button>
-          <button class="btn-icon danger" onclick="removeExpense(${e.id})" aria-label="Delete"><i class="bi bi-trash" aria-hidden="true"></i></button>
+          <button class="btn-icon" onclick="startEdit(${e.id})" aria-label="Edit"><i class="bi bi-pencil"></i></button>
+          <button class="btn-icon danger" onclick="removeExpense(${e.id})" aria-label="Delete"><i class="bi bi-trash"></i></button>
         </div>
       </div>
     </div>`).join('');
+    }
+    function removeExpense(id) { expenses = expenses.filter(e => e.id !== id); onUpdate(); }
+    function startEdit(id) {
+      const e = expenses.find(x => x.id === id); if (!e) return;
+      editId = id; editSplit = new Set(e.split);
+      document.getElementById('edit-desc').value = e.desc;
+      document.getElementById('edit-amount').value = e.amount;
+      renderPayerSelect('edit-payer');
+      document.getElementById('edit-payer').value = e.payer;
+      renderEditSplitChips();
+      document.getElementById('edit-panel').style.display = '';
+      document.getElementById('edit-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    function renderEditSplitChips() {
+      document.getElementById('edit-split-chips').innerHTML = people.map(p =>
+        `<span class="pchip${editSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${esc(p)}','edit')">${esc(p)}</span>`).join('');
+    }
+    function saveEdit() {
+      const desc = document.getElementById('edit-desc').value.trim();
+      const amount = parseFloat(document.getElementById('edit-amount').value);
+      const payer = document.getElementById('edit-payer').value;
+      if (!desc || isNaN(amount) || amount <= 0 || !payer) return;
+      const split = editSplit.size > 0 ? [...editSplit] : [...people];
+      const idx = expenses.findIndex(x => x.id === editId);
+      if (idx > -1) expenses[idx] = { id: editId, desc, amount, payer, split };
+      editId = null; editSplit = new Set();
+      document.getElementById('edit-panel').style.display = 'none';
+      onUpdate();
+    }
+    function cancelEdit() {
+      editId = null; editSplit = new Set();
+      document.getElementById('edit-panel').style.display = 'none';
+    }
+
+    // ─── Settle ───────────────────────────────────────────────────────────────────
+    function calcSettleData() {
+      const bal = {}; people.forEach(p => bal[p] = 0);
+      expenses.forEach(e => {
+        const share = e.amount / e.split.length;
+        e.split.forEach(p => bal[p] -= share);
+        bal[e.payer] += e.amount;
+      });
+      const pos = [], neg = [];
+      Object.entries(bal).forEach(([p, v]) => {
+        if (v > 0.005) pos.push({ p, v }); else if (v < -0.005) neg.push({ p, v: -v });
+      });
+      const transfers = [], p2 = [...pos], n2 = [...neg];
+      while (p2.length && n2.length) {
+        const cr = p2[0], db = n2[0], amt = Math.min(cr.v, db.v);
+        transfers.push({ from: db.p, to: cr.p, amt });
+        cr.v -= amt; db.v -= amt;
+        if (cr.v < 0.005) p2.shift(); if (db.v < 0.005) n2.shift();
       }
-      function removeExpense(id) { expenses = expenses.filter(e => e.id !== id); onUpdate(); }
-      function startEdit(id) {
-        const e = expenses.find(x => x.id === id); if (!e) return;
-        editId = id; editSplit = new Set(e.split);
-        document.getElementById('edit-desc').value = e.desc;
-        document.getElementById('edit-amount').value = e.amount;
-        renderPayerSelect('edit-payer');
-        document.getElementById('edit-payer').value = e.payer;
-        renderEditSplitChips();
-        document.getElementById('edit-panel').style.display = '';
-        document.getElementById('edit-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }
-      function renderEditSplitChips() {
-        document.getElementById('edit-split-chips').innerHTML = people.map(p => `<span class="pchip${editSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${p}','edit')">${p}</span>`).join('');
-      }
-      function saveEdit() {
-        const desc = document.getElementById('edit-desc').value.trim();
-        const amount = parseFloat(document.getElementById('edit-amount').value);
-        const payer = document.getElementById('edit-payer').value;
-        if (!desc || isNaN(amount) || amount <= 0 || !payer) return;
-        const split = editSplit.size > 0 ? [...editSplit] : [...people];
-        const idx = expenses.findIndex(x => x.id === editId);
-        if (idx > -1) expenses[idx] = { id: editId, desc, amount, payer, split };
-        editId = null; editSplit = new Set();
-        document.getElementById('edit-panel').style.display = 'none';
-        onUpdate();
-      }
-      function cancelEdit() {
-        editId = null; editSplit = new Set();
-        document.getElementById('edit-panel').style.display = 'none';
-      }
-      function renderSettle() {
-        const el = document.getElementById('settle-result');
-        if (people.length < 2) { el.innerHTML = '<p style="color:#888">Add at least 2 people first.</p>'; return; }
-        if (!expenses.length) { el.innerHTML = '<p style="color:#888">No expenses added yet.</p>'; return; }
-        const bal = {}; people.forEach(p => bal[p] = 0);
-        expenses.forEach(e => {
-          const share = e.amount / e.split.length;
-          e.split.forEach(p => bal[p] -= share);
-          bal[e.payer] += e.amount;
-        });
-        const total = expenses.reduce((s, e) => s + e.amount, 0);
-        const summaryHTML = `
+      const total = expenses.reduce((s, e) => s + e.amount, 0);
+      return { bal, transfers, total };
+    }
+    function renderSettle() {
+      const el = document.getElementById('settle-result');
+      if (people.length < 2) { el.innerHTML = '<p style="color:#888">Add at least 2 people first.</p>'; return; }
+      if (!expenses.length) { el.innerHTML = '<p style="color:#888">No expenses added yet.</p>'; return; }
+      const { bal, transfers, total } = calcSettleData();
+      const summaryHTML = `
     <div class="d-flex gap-2 mb-3 flex-wrap">
       ${people.map(p => `
         <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:8px 12px;min-width:90px">
-          <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">${p}</div>
+          <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">${esc(p)}</div>
           <div style="font-size:15px;font-weight:600;color:${bal[p] > 0.01 ? '#1a6b2f' : bal[p] < -0.01 ? '#c0392b' : '#444'}">${bal[p] > 0.01 ? '+' : ''}£${Math.abs(bal[p]).toFixed(2)}</div>
           <div style="font-size:11px;color:#aaa">${bal[p] > 0.01 ? 'gets back' : bal[p] < -0.01 ? 'owes' : 'settled'}</div>
         </div>`).join('')}
     </div>
     <div style="font-size:12px;color:#aaa;margin-bottom:12px">Total spend: £${total.toFixed(2)}</div>`;
-        const pos = [], neg = [];
-        Object.entries(bal).forEach(([p, v]) => {
-          if (v > 0.005) pos.push({ p, v });
-          else if (v < -0.005) neg.push({ p, v: -v });
-        });
-        const transfers = [];
-        const p2 = [...pos], n2 = [...neg];
-        while (p2.length && n2.length) {
-          const cr = p2[0], db = n2[0], amt = Math.min(cr.v, db.v);
-          transfers.push({ from: db.p, to: cr.p, amt });
-          cr.v -= amt; db.v -= amt;
-          if (cr.v < 0.005) p2.shift();
-          if (db.v < 0.005) n2.shift();
-        }
-        const transfersHTML = transfers.length
-          ? `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:8px">Transfers</div>`
-          + transfers.map(t => `
+      const transfersHTML = transfers.length
+        ? `<div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:8px">Transfers</div>`
+        + transfers.map(t => `
         <div class="transfer-card">
           <span class="avatar">${initials(t.from)}</span>
-          <span style="font-size:14px;font-weight:500">${t.from}</span>
-          <i class="bi bi-arrow-right" style="color:#aaa" aria-hidden="true"></i>
+          <span style="font-size:14px;font-weight:500">${esc(t.from)}</span>
+          <i class="bi bi-arrow-right" style="color:#aaa"></i>
           <span class="avatar">${initials(t.to)}</span>
-          <span style="font-size:14px;font-weight:500">${t.to}</span>
+          <span style="font-size:14px;font-weight:500">${esc(t.to)}</span>
           <span class="amount">£${t.amt.toFixed(2)}</span>
         </div>`).join('')
-          : `<div style="background:#eaf3de;border-radius:8px;padding:10px 14px;color:#3B6D11;font-size:14px"><i class="bi bi-circle-check me-1" aria-hidden="true"></i>Everyone is settled up!</div>`;
-        el.innerHTML = summaryHTML + transfersHTML;
-      }
+        : `<div style="background:#eaf3de;border-radius:8px;padding:10px 14px;color:#3B6D11;font-size:14px"><i class="bi bi-check-circle me-1"></i>Everyone is settled up!</div>`;
+      el.innerHTML = summaryHTML + transfersHTML;
+    }
 
-      function calcSettleData() {
-        const bal = {}; people.forEach(p => bal[p] = 0);
-        expenses.forEach(e => {
-          const share = e.amount / e.split.length;
-          e.split.forEach(p => bal[p] -= share);
-          bal[e.payer] += e.amount;
-        });
-        const pos = [], neg = [];
-        Object.entries(bal).forEach(([p, v]) => {
-          if (v > 0.005) pos.push({ p, v });
-          else if (v < -0.005) neg.push({ p, v: -v });
-        });
-        const transfers = [];
-        const p2 = [...pos], n2 = [...neg];
-        while (p2.length && n2.length) {
-          const cr = p2[0], db = n2[0], amt = Math.min(cr.v, db.v);
-          transfers.push({ from: db.p, to: cr.p, amt });
-          cr.v -= amt; db.v -= amt;
-          if (cr.v < 0.005) p2.shift();
-          if (db.v < 0.005) n2.shift();
-        }
-        const total = expenses.reduce((s, e) => s + e.amount, 0);
-        return { bal, transfers, total };
+    // ─── Clipboard ────────────────────────────────────────────────────────────────
+    async function copyToClipboard(text, btn) {
+      try {
+        await navigator.clipboard.writeText(text);
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
+        btn.classList.add('btn-success'); btn.classList.remove('btn-outline-secondary');
+        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('btn-success'); btn.classList.add('btn-outline-secondary'); }, 2000);
+      } catch (e) { alert('Copy failed — try long-pressing the text instead.'); }
+    }
+    function copyMessage() {
+      if (people.length < 2 || !expenses.length) return;
+      const { bal, transfers, total } = calcSettleData();
+      const tripName = currentId ? trips[currentId].name : 'Trip';
+      const lines = [`💸 *${tripName}*`, ''];
+      lines.push('*Balances:*');
+      people.forEach(p => {
+        const v = bal[p];
+        lines.push(`${v > 0.01 ? '✅' : v < -0.01 ? '🔴' : '⚪'} ${p}: ${v > 0.01 ? '+' : ''}£${Math.abs(v).toFixed(2)} ${v > 0.01 ? '(gets back)' : v < -0.01 ? '(owes)' : '(settled)'}`);
+      });
+      lines.push('', `*Total spend: £${total.toFixed(2)}*`);
+      if (transfers.length) {
+        lines.push('', '*Transfers needed:*');
+        transfers.forEach(t => lines.push(`  ${t.from} → ${t.to}: £${t.amt.toFixed(2)}`));
+      } else { lines.push('', '✅ Everyone is settled up!'); }
+      copyToClipboard(lines.join('\n'), event.currentTarget);
+    }
+    function copySheets() {
+      if (!expenses.length) return;
+      const { bal, transfers, total } = calcSettleData();
+      const rows = [['Description', 'Amount', 'Paid by', 'Split between']];
+      expenses.forEach(e => rows.push([e.desc, e.amount.toFixed(2), e.payer, e.split.join(', ')]));
+      rows.push([]);
+      rows.push(['--- Settlement ---', '', '', '']);
+      rows.push(['Person', 'Balance', 'Status', '']);
+      people.forEach(p => { const v = bal[p]; rows.push([p, (v > 0 ? '+' : '') + v.toFixed(2), v > 0.01 ? 'gets back' : v < -0.01 ? 'owes' : 'settled', '']); });
+      rows.push(['Total', total.toFixed(2), '', '']);
+      if (transfers.length) {
+        rows.push([], ['From', 'To', 'Amount', '']);
+        transfers.forEach(t => rows.push([t.from, t.to, t.amt.toFixed(2), '']));
       }
+      copyToClipboard(rows.map(r => r.join('\t')).join('\n'), event.currentTarget);
+    }
 
-      async function copyToClipboard(text, btn) {
-        try {
-          await navigator.clipboard.writeText(text);
-          const orig = btn.innerHTML;
-          btn.innerHTML = '<i class="bi bi-check me-1"></i>Copied!';
-          btn.classList.add('btn-success'); btn.classList.remove('btn-outline-secondary');
-          setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('btn-success'); btn.classList.add('btn-outline-secondary'); }, 2000);
-        } catch (e) { alert('Copy failed — try long-pressing the text instead.'); }
-      }
-
-      function copyText() {
-        if (people.length < 2 || !expenses.length) return;
-        const { bal, transfers, total } = calcSettleData();
-        const lines = ['💸 *Trip expenses*', ''];
-        lines.push('*Balances:*');
-        people.forEach(p => {
-          const v = bal[p];
-          const icon = v > 0.01 ? '✅' : v < -0.01 ? '🔴' : '⚪';
-          lines.push(`${icon} ${p}: ${v > 0.01 ? '+' : ''}£${Math.abs(v).toFixed(2)} ${v > 0.01 ? '(gets back)' : v < -0.01 ? '(owes)' : '(settled)'}`);
-        });
-        lines.push('');
-        lines.push(`*Total spend: £${total.toFixed(2)}*`);
-        if (transfers.length) {
-          lines.push('');
-          lines.push('*Transfers needed:*');
-          transfers.forEach(t => lines.push(`  ${t.from} → ${t.to}: £${t.amt.toFixed(2)}`));
-        } else {
-          lines.push(''); lines.push('✅ Everyone is settled up!');
-        }
-        copyToClipboard(lines.join('\n'), event.currentTarget);
-      }
-
-      function copySheets() {
-        if (!expenses.length) return;
-        const rows = [['Description', 'Amount', 'Paid by', 'Split between']];
-        expenses.forEach(e => rows.push([e.desc, e.amount.toFixed(2), e.payer, e.split.join(', ')]));
-        rows.push([]);
-        const { bal, transfers, total } = calcSettleData();
-        rows.push(['--- Settlement ---', '', '', '']);
-        rows.push(['Person', 'Balance', 'Status', '']);
-        people.forEach(p => {
-          const v = bal[p];
-          rows.push([p, (v > 0 ? '+' : '') + v.toFixed(2), v > 0.01 ? 'gets back' : v < -0.01 ? 'owes' : 'settled', '']);
-        });
-        rows.push(['Total', total.toFixed(2), '', '']);
-        if (transfers.length) {
-          rows.push([]);
-          rows.push(['From', 'To', 'Amount', '']);
-          transfers.forEach(t => rows.push([t.from, t.to, t.amt.toFixed(2), '']));
-        }
-        copyToClipboard(rows.map(r => r.join('\t')).join('\n'), event.currentTarget);
-      }
-
-      load(); onUpdate();
-    </script>
+    // ─── Init ─────────────────────────────────────────────────────────────────────
+    loadAll();
+    renderSidebar();
+    checkUrlTrip();
+    // Auto-select only trip if there's one
+    if (!currentId) {
+      const ids = Object.keys(trips);
+      if (ids.length === 1) selectTrip(ids[0]);
+    }
+  </script>
+</body>
 
 </html>
