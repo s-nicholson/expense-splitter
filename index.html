@@ -36,7 +36,7 @@
       border-right: 1px solid #dee2e6;
       display: flex;
       flex-direction: column;
-      transition: transform .25s ease;
+      transition: transform .25s ease, width .25s ease;
       overflow: hidden
     }
 
@@ -157,10 +157,7 @@
         transform: translateX(0)
       }
 
-      #sidebar.collapsed {
-        transform: translateX(-100%);
-        width: 240px
-      }
+      /* collapsed is desktop-only; mobile always hides via base translateX(-100%) */
     }
 
     /* Main area */
@@ -366,12 +363,12 @@
   <div id="app">
 
     <!-- Sidebar -->
-    <div id="sidebar-overlay" onclick="closeSidebar()"></div>
-    <div id="sidebar" class="collapsed">
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <div id="sidebar">
       <div id="sidebar-inner">
         <div class="sidebar-header">
           <h6>Trips</h6>
-          <button class="btn-icon-sm" onclick="closeSidebar()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
+          <button class="btn-icon-sm" onclick="toggleSidebar()" aria-label="Close"><i class="bi bi-x-lg"></i></button>
         </div>
         <div id="trip-list"></div>
         <div class="sidebar-footer">
@@ -525,7 +522,7 @@
       saveAll();
       selectTrip(id);
       renderSidebar();
-      closeSidebar();
+      toggleSidebar();
     }
     function selectTrip(id) {
       if (!trips[id]) return;
@@ -573,7 +570,7 @@
         return;
       }
       list.innerHTML = ids.map(id => `
-    <div class="trip-item${id === currentId ? ' active' : ''}" onclick="selectTrip('${id}');closeSidebar()">
+    <div class="trip-item${id === currentId ? ' active' : ''}" onclick="selectTrip('${id}');toggleSidebar()">
       <i class="bi bi-suitcase" style="font-size:15px;flex-shrink:0"></i>
       <span class="trip-name">${esc(trips[id].name)}</span>
       <button class="btn-icon-sm" onclick="renameTrip('${id}',event)" title="Rename"><i class="bi bi-pencil"></i></button>
@@ -585,18 +582,16 @@
     // ─── Sidebar toggle ───────────────────────────────────────────────────────────
     function toggleSidebar() {
       const sb = document.getElementById('sidebar');
-      const isMobile = window.innerWidth <= 640;
-      if (isMobile) {
-        const open = sb.classList.toggle('open');
-        document.getElementById('sidebar-overlay').classList.toggle('show', open);
+      if (window.innerWidth <= 640) {
+        // Mobile: base CSS hides via translateX(-100%), .open shows it
+        // Never touch 'collapsed' on mobile
+        const opening = !sb.classList.contains('open');
+        sb.classList.toggle('open', opening);
+        document.getElementById('sidebar-overlay').classList.toggle('show', opening);
       } else {
+        // Desktop: toggle collapsed (no transforms involved)
         sb.classList.toggle('collapsed');
       }
-    }
-    function closeSidebar() {
-      document.getElementById('sidebar').classList.remove('open');
-      document.getElementById('sidebar').classList.add('collapsed');
-      document.getElementById('sidebar-overlay').classList.remove('show');
     }
 
     // ─── URL sharing ──────────────────────────────────────────────────────────────
