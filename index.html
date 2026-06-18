@@ -344,6 +344,19 @@
       }
     }
 
+    .couple-badge {
+      display: inline-flex;
+      align-items: center;
+      background: #fff3cd;
+      color: #7d4e00;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 1px 6px;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+
     /* Empty state */
     #no-trip {
       display: flex;
@@ -417,11 +430,20 @@
           <div id="tab-people">
             <div class="card mb-3">
               <div class="card-body">
-                <div class="d-flex gap-2">
-                  <input type="text" class="form-control form-control-sm" id="person-name" placeholder="Add a person…"
+                <div class="d-flex gap-2 mb-2">
+                  <input type="text" class="form-control form-control-sm" id="person-name" placeholder="Name…"
                     onkeydown="if(event.key==='Enter')addPerson()">
                   <button class="btn btn-sm btn-outline-primary flex-shrink-0" onclick="addPerson()"><i
                       class="bi bi-plus"></i></button>
+                </div>
+                <div class="d-flex gap-2">
+                  <button id="toggle-single" class="btn btn-sm btn-primary flex-fill" onclick="setPersonSize(1)">
+                    <i class="bi bi-person me-1"></i>Single
+                  </button>
+                  <button id="toggle-couple" class="btn btn-sm btn-outline-secondary flex-fill"
+                    onclick="setPersonSize(2)">
+                    <i class="bi bi-people me-1"></i>Couple
+                  </button>
                 </div>
               </div>
             </div>
@@ -490,8 +512,9 @@
   <script>
     // ─── State ────────────────────────────────────────────────────────────────────
     let trips = {};        // { [id]: { name, people, expenses } }
+    // people is now [{name, size}] where size=1 (single) or size=2 (couple)
     let currentId = null;  // active trip id
-    let people = [], expenses = [];
+    let people = [], expenses = [], newPersonSize = 1;
     let selectedSplit = new Set(), editId = null, editSplit = new Set();
 
     // ─── Persistence ─────────────────────────────────────────────────────────────
@@ -529,7 +552,7 @@
       currentId = id;
       people = trips[id].people;
       expenses = trips[id].expenses;
-      selectedSplit = new Set(); editId = null; editSplit = new Set();
+      selectedSplit = new Set(); editId = null; editSplit = new Set(); newPersonSize = 1;
       document.getElementById('no-trip').style.display = 'none';
       document.getElementById('trip-ui').style.display = '';
       document.getElementById('trip-title').textContent = trips[id].name;
@@ -651,13 +674,22 @@
     }
 
     // ─── People ───────────────────────────────────────────────────────────────────
+    function setPersonSize(size) {
+      newPersonSize = size;
+      document.getElementById('toggle-single').className = 'btn btn-sm flex-fill ' + (size === 1 ? 'btn-primary' : 'btn-outline-secondary');
+      document.getElementById('toggle-couple').className = 'btn btn-sm flex-fill ' + (size === 2 ? 'btn-primary' : 'btn-outline-secondary');
+    }
+    function pByName(name) { return people.find(p => p.name === name); }
     function addPerson() {
       const inp = document.getElementById('person-name'), name = inp.value.trim();
-      if (!name || people.includes(name)) return;
-      people.push(name); inp.value = ''; onUpdate();
+      if (!name || people.some(p => p.name === name)) return;
+      people.push({ name, size: newPersonSize });
+      inp.value = '';
+      setPersonSize(1); // reset toggle
+      onUpdate();
     }
     function removePerson(name) {
-      people = people.filter(p => p !== name);
+      people = people.filter(p => p.name !== name);
       expenses = expenses.filter(e => e.payer !== name);
       onUpdate();
     }
@@ -665,19 +697,20 @@
     function renderPeople() {
       document.getElementById('people-list').innerHTML = people.map(p => `
     <div class="d-flex align-items-center gap-1 border rounded px-2 py-1" style="font-size:13px;background:#fff">
-      <span class="avatar">${initials(p)}</span>${esc(p)}
-      <button class="btn-icon ms-1" onclick="removePerson('${esc(p)}')" aria-label="Remove ${esc(p)}"><i class="bi bi-x" style="font-size:13px"></i></button>
+      <span class="avatar">${p.size === 2 ? '<i class="bi bi-people" style="font-size:13px"></i>' : initials(p.name)}</span>
+      ${esc(p.name)}${p.size === 2 ? '<span class="couple-badge">×2</span>' : ''}
+      <button class="btn-icon ms-1" onclick="removePerson('${esc(p.name)}')" aria-label="Remove ${esc(p.name)}"><i class="bi bi-x" style="font-size:13px"></i></button>
     </div>`).join('');
     }
 
     // ─── Payer select & split chips ───────────────────────────────────────────────
     function renderPayerSelect(id) {
       const sel = document.getElementById(id), cur = sel.value;
-      sel.innerHTML = '<option value="">Paid by…</option>' + people.map(p => `<option${p === cur ? ' selected' : ''}>${esc(p)}</option>`).join('');
+      sel.innerHTML = '<option value="">Paid by…</option>' + people.map(p => `<option${p.name === cur ? ' selected' : ''}>${esc(p.name)}</option>`).join('');
     }
     function renderSplitChips() {
       document.getElementById('split-chips').innerHTML = people.map(p =>
-        `<span class="pchip${selectedSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${esc(p)}','add')">${esc(p)}</span>`).join('');
+        `<span class="pchip${selectedSplit.has(p.name) ? ' sel' : ''}" onclick="toggleSplit('${esc(p.name)}','add')">${esc(p.name)}${p.size === 2 ? '<span class="couple-badge">×2</span>' : ''}</span>`).join('');
     }
     function toggleSplit(name, mode) {
       const s = mode === 'add' ? selectedSplit : editSplit;
@@ -691,7 +724,7 @@
       const amount = parseFloat(document.getElementById('exp-amount').value);
       const payer = document.getElementById('exp-payer').value;
       if (!desc || isNaN(amount) || amount <= 0 || !payer) { alert('Fill in all fields.'); return; }
-      const split = selectedSplit.size > 0 ? [...selectedSplit] : [...people];
+      const split = selectedSplit.size > 0 ? [...selectedSplit] : people.map(p => p.name);
       expenses.push({ id: Date.now(), desc, amount, payer, split });
       document.getElementById('exp-desc').value = '';
       document.getElementById('exp-amount').value = '';
@@ -729,14 +762,14 @@
     }
     function renderEditSplitChips() {
       document.getElementById('edit-split-chips').innerHTML = people.map(p =>
-        `<span class="pchip${editSplit.has(p) ? ' sel' : ''}" onclick="toggleSplit('${esc(p)}','edit')">${esc(p)}</span>`).join('');
+        `<span class="pchip${editSplit.has(p.name) ? ' sel' : ''}" onclick="toggleSplit('${esc(p.name)}','edit')">${esc(p.name)}${p.size === 2 ? '<span class="couple-badge">×2</span>' : ''}</span>`).join('');
     }
     function saveEdit() {
       const desc = document.getElementById('edit-desc').value.trim();
       const amount = parseFloat(document.getElementById('edit-amount').value);
       const payer = document.getElementById('edit-payer').value;
       if (!desc || isNaN(amount) || amount <= 0 || !payer) return;
-      const split = editSplit.size > 0 ? [...editSplit] : [...people];
+      const split = editSplit.size > 0 ? [...editSplit] : people.map(p => p.name);
       const idx = expenses.findIndex(x => x.id === editId);
       if (idx > -1) expenses[idx] = { id: editId, desc, amount, payer, split };
       editId = null; editSplit = new Set();
@@ -750,10 +783,14 @@
 
     // ─── Settle ───────────────────────────────────────────────────────────────────
     function calcSettleData() {
-      const bal = {}; people.forEach(p => bal[p] = 0);
+      const bal = {}; people.forEach(p => bal[p.name] = 0);
+      // Helper: get size of a person by name (default 1 for backwards compat)
+      const sizeOf = name => { const p = pByName(name); return p ? p.size : 1; };
       expenses.forEach(e => {
-        const share = e.amount / e.split.length;
-        e.split.forEach(p => bal[p] -= share);
+        // Weighted split: divide by total heads in split group, each pays size × share_per_head
+        const totalHeads = e.split.reduce((s, name) => s + sizeOf(name), 0);
+        const sharePerHead = e.amount / totalHeads;
+        e.split.forEach(name => bal[name] -= sharePerHead * sizeOf(name));
         bal[e.payer] += e.amount;
       });
       const pos = [], neg = [];
@@ -779,9 +816,9 @@
     <div class="d-flex gap-2 mb-3 flex-wrap">
       ${people.map(p => `
         <div style="background:#f8f9fa;border:1px solid #ddd;border-radius:8px;padding:8px 12px;min-width:90px">
-          <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">${esc(p)}</div>
-          <div style="font-size:15px;font-weight:600;color:${bal[p] > 0.01 ? '#1a6b2f' : bal[p] < -0.01 ? '#c0392b' : '#444'}">${bal[p] > 0.01 ? '+' : ''}£${Math.abs(bal[p]).toFixed(2)}</div>
-          <div style="font-size:11px;color:#aaa">${bal[p] > 0.01 ? 'gets back' : bal[p] < -0.01 ? 'owes' : 'settled'}</div>
+          <div style="font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em">${esc(p.name)}${p.size === 2 ? ' <span class=\'couple-badge\'>×2</span>' : ''}</div>
+          <div style="font-size:15px;font-weight:600;color:${bal[p.name] > 0.01 ? '#1a6b2f' : bal[p.name] < -0.01 ? '#c0392b' : '#444'}">${bal[p.name] > 0.01 ? '+' : ''}£${Math.abs(bal[p.name]).toFixed(2)}</div>
+          <div style="font-size:11px;color:#aaa">${bal[p.name] > 0.01 ? 'gets back' : bal[p.name] < -0.01 ? 'owes' : 'settled'}</div>
         </div>`).join('')}
     </div>
     <div style="font-size:12px;color:#aaa;margin-bottom:12px">Total spend: £${total.toFixed(2)}</div>`;
@@ -817,8 +854,8 @@
       const lines = [`💸 *${tripName}*`, ''];
       lines.push('*Balances:*');
       people.forEach(p => {
-        const v = bal[p];
-        lines.push(`${v > 0.01 ? '✅' : v < -0.01 ? '🔴' : '⚪'} ${p}: ${v > 0.01 ? '+' : ''}£${Math.abs(v).toFixed(2)} ${v > 0.01 ? '(gets back)' : v < -0.01 ? '(owes)' : '(settled)'}`);
+        const v = bal[p.name];
+        lines.push(`${v > 0.01 ? '✅' : v < -0.01 ? '🔴' : '⚪'} ${p.name}${p.size === 2 ? ' (couple)' : ''}: ${v > 0.01 ? '+' : ''}£${Math.abs(v).toFixed(2)} ${v > 0.01 ? '(gets back)' : v < -0.01 ? '(owes)' : '(settled)'}`);
       });
       lines.push('', `*Total spend: £${total.toFixed(2)}*`);
       if (transfers.length) {
@@ -835,7 +872,7 @@
       rows.push([]);
       rows.push(['--- Settlement ---', '', '', '']);
       rows.push(['Person', 'Balance', 'Status', '']);
-      people.forEach(p => { const v = bal[p]; rows.push([p, (v > 0 ? '+' : '') + v.toFixed(2), v > 0.01 ? 'gets back' : v < -0.01 ? 'owes' : 'settled', '']); });
+      people.forEach(p => { const v = bal[p.name]; rows.push([p.name + (p.size === 2 ? ' (couple)' : ''), (v > 0 ? '+' : '') + v.toFixed(2), v > 0.01 ? 'gets back' : v < -0.01 ? 'owes' : 'settled', '']); });
       rows.push(['Total', total.toFixed(2), '', '']);
       if (transfers.length) {
         rows.push([], ['From', 'To', 'Amount', '']);
