@@ -525,10 +525,8 @@
         const raw = localStorage.getItem('trips_v2');
         if (raw) {
           trips = JSON.parse(raw);
-          // Migrate: people may be strings (old format) → {name, size:1}
           Object.values(trips).forEach(t => {
-            if (t.people?.length && typeof t.people[0] === 'string')
-              t.people = t.people.map(name => ({ name, size: 1 }));
+            t.people = migratePeople(t.people);
           });
         }
         // Migrate old single-trip data
@@ -648,7 +646,7 @@
         if (!confirm(msg)) { history.replaceState(null, '', location.pathname); return; }
         // Check for existing trip with same name
         const id = uid();
-        trips[id] = { name: data.name, people: data.people, expenses: data.expenses };
+        trips[id] = { name: data.name, people: migratePeople(data.people), expenses: data.expenses };
         saveAll();
         selectTrip(id);
         renderSidebar();
@@ -707,6 +705,12 @@
       ${esc(p.name)}${p.size === 2 ? '<span class="couple-badge">×2</span>' : ''}
       <button class="btn-icon ms-1" onclick="removePerson('${esc(p.name)}')" aria-label="Remove ${esc(p.name)}"><i class="bi bi-x" style="font-size:13px"></i></button>
     </div>`).join('');
+    }
+    function migratePeople(people) {
+      // Migrate: people may be strings (old format) → {name, size:1}
+      if (people?.length && typeof people[0] === 'string')
+        return people.map(name => ({ name, size: 1 }));
+      return people;
     }
 
     // ─── Payer select & split chips ───────────────────────────────────────────────
