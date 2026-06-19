@@ -524,7 +524,14 @@
     function loadAll() {
       try {
         const raw = localStorage.getItem('trips_v2');
-        if (raw) trips = JSON.parse(raw);
+        if (raw) {
+          trips = JSON.parse(raw);
+          // Migrate: people may be strings (old format) → {name, size:1}
+          Object.values(trips).forEach(t => {
+            if (t.people?.length && typeof t.people[0] === 'string')
+              t.people = t.people.map(name => ({ name, size: 1 }));
+          });
+        }
         // Migrate old single-trip data
         const op = localStorage.getItem('trip_people'), oe = localStorage.getItem('trip_expenses');
         if ((op || oe) && !Object.keys(trips).length) {
